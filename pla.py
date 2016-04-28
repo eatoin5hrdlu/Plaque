@@ -1,18 +1,20 @@
-#!C:/cygwin/Python27/python -u
 #!/usr/bin/python -u
+#!C:/cygwin/Python27/python -u
 #!C:/Python27/python -u
 # Regions lead with y  (y1,x1,y2,x2) where (y1,x1) is (uppermost,leftmost)
 # OpenCV blob,contour algorithms return (X,Y,Width,Height) not(x,y,x2,y2)
 #
 from __future__ import print_function
 import sys, os, time, socket, subprocess, re, traceback
-from os  import popen
+from os  import popen, path
 import glob
 import base64, urllib2
 from suppress_stdout_stderr import suppress_stdout_stderr
 import numpy as np
 import cv2
 import cv2.cv as cv
+
+pause = 4000
 
 def plog(str) :
     print(str, file=sys.stderr)
@@ -27,7 +29,7 @@ def nullImage(img, who) :
 
 def showUser(img) :
     cv2.imshow("camera", img)
-    if cv.WaitKey(100) == 27:
+    if cv.WaitKey(pause) == 27:
         exit(0)
 
 def contrastThresh(img,iter,mul,off,thresh=127) :
@@ -72,10 +74,10 @@ def contrast(img,iter,mul,off) :
 # Find settings to find num objects in this image
 
 def countThisMany(img0,num) :
-    for clow in [2,4,8] :
-        for chigh in [60,80,100] :
-            for mul in [1.7,1.8,1.9,2.0] :
-                for off in [-70,-80,-90] :
+    for clow in [2] :
+        for chigh in [100] :
+            for mul in [1.7] :
+                for off in [-90] :
                     img = contrast(img0,1,mul,off)
                     showUser(img)
                     edges = cv2.Canny(img,clow,chigh)
@@ -87,7 +89,7 @@ def countThisMany(img0,num) :
                         rs.append(r)
                     rs.sort()
                     delta = 1
-                    for incr in [1,2,4]:
+                    for incr in [4]:
                         count = 0
                         a = rs[0]
                         for r in rs[1:]:
@@ -107,7 +109,12 @@ def countThisMany(img0,num) :
         
 if __name__ == "__main__" :
     plog("openCV('" + str(cv2.__version__) + "').")
-    img = cv2.imread(sys.argv[1])
+    imagefile = "plaque.jpg"
+    if ( len(sys.argv) > 1 and path.isfile(sys.argv[1]) ) :
+        imagefile = sys.argv[1]
+    if (len(sys.argv) > 2) :
+        pause = int(sys.argv[2])
+    img = cv2.imread(imagefile)
     plog(str(img.shape))
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY )
     countThisMany(gray,161)
